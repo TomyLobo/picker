@@ -1,0 +1,10 @@
+"AddonInfo"
+{
+	"name"				"Developer Picker"
+	"version"			"1.21"
+	"up_date"			"2009-09-09"
+	"author_name"			"ReaperSWE and TomyLobo"
+	"author_email"			""
+	"author_url"			"http://www.facepunch.com/showthread.php?t=770769"
+	"info"				"Lets you see all clientside entities as nodes"
+}
