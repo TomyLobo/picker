@@ -26,6 +26,7 @@
 ----------------------------------------------------------------
 -- Version history:                                           --
 --        - Made picker2_decimals fault-tolerant              --
+--        - Not requiring wiremod anymore.
 --   1.21 - Version 1.2 accidentaly required wiremod to work  --
 --   1.2  - Made label positions a lot more consistent,       --
 --          if there is a lot of them.                        --
@@ -37,6 +38,8 @@
 ----------------------------------------------------------------
 
 if not CLIENT then return end -- to avoid stupidity
+
+local validEntity = _R.Entity.IsValid
 
 -- configuration is now done via cvars:
 picker2_centerdist = CreateClientConVar("picker2_centerdist", 16, true, false)
@@ -178,7 +181,7 @@ local function drawents()
 	
 	-- Always draw labels for the entity the player is looking at.
 	local traceent = trace.Entity
-	if ValidEntity(traceent) and not freeze_labels then
+	if validEntity(traceent) and not freeze_labels then
 		local hasphys = false
 		if mode == 2 then
 			local tracephys = traceent:GetPhysicsObjectNum(trace.PhysicsBone)
