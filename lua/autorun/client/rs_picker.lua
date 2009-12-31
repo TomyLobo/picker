@@ -98,7 +98,7 @@ hook.Add("EntityRemoved", "picker2", function(ent)
 end)
 
 --local LocalToWorld = FindMetaTable("Entity").LocalToWorld
-local ToScreen = FindMetaTable("Vector").ToScreen
+local ToScreen = _R.Vector.ToScreen
 local SetDrawColor = surface.SetDrawColor
 local DrawLine = surface.DrawLine
 
