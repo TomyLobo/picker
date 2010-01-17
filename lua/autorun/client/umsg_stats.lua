@@ -10,20 +10,21 @@ local function do_umsg_hooks()
 	umsg_hooks_usermessage_IncomingMessage = usermessage_IncomingMessage
 	IncomingMessage_lookup = {}
 	function usermessage.IncomingMessage( MessageName, msg )
-
-		if not IncomingMessage_lookup[MessageName] then
+		local entry = IncomingMessage_lookup[MessageName]
+		if not entry then
 			print("First received a \""..MessageName.."\" message")
-			--yorzmsg = msg
+			entry = { 0, 0 }
+			IncomingMessage_lookup[MessageName] = entry
 		end
-		if not IncomingMessage_lookup[MessageName] then
-			IncomingMessage_lookup[MessageName] = { 0, 0 }
-		end
-		IncomingMessage_lookup[MessageName][1] = IncomingMessage_lookup[MessageName][1] + 1
+		
+		entry[1] = entry[1] + 1
 		totalamount = totalamount + 1
+		
 		currentsize = 0
 		usermessage_IncomingMessage(MessageName, msg)
+		
 		totalsize = totalsize + currentsize
-		IncomingMessage_lookup[MessageName][2] = IncomingMessage_lookup[MessageName][2] + currentsize
+		entry[2] = entry[2] + currentsize
 	end
 	
 	local bf_read = FindMetaTable("bf_read")
@@ -83,8 +84,8 @@ local function do_umsg_hooks()
 		self[cursor] = data
 	end
 	
-	local dat_amount = {} setmetatable(dat_amount, dat) dat_amount:Initialize()
-	local dat_size   = {} setmetatable(dat_size  , dat) dat_size:Initialize()
+	local dat_amount = setmetatable({}, dat) dat_amount:Initialize()
+	local dat_size   = setmetatable({}, dat) dat_size:Initialize()
 	
 	
 	local lastamount, lastsize, lasttime = 0,0,CurTime()
