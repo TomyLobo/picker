@@ -1,41 +1,41 @@
-----------------------------------------------------------------
--- Usage:                                                     --
---   bind key picker2                                         --
---     Enable/Disable picker.                                 --
---                                                            --
---   bind key +picker2_copy                                   --
---     Copies the highlighted entry to the clipboard.         --
---     Hold down, move mouse over label, release.             --
---                                                            --
-----------------------------------------------------------------
--- Console Variables:                                         --
---   picker2_centerdist:                                      --
---     How far from the center should labels be drawn?        --
---     Default = 16 pixels                                    --
---                                                            --
---   picker2_decimals:                                        --
---     Number of decimals to round to.                        --
---     Default = 2                                            --
---                                                            --
---   picker2_box:                                             --
---     Draw boxes around the currently highlighted label?     --
---     0 = never                                              --
---     1 = while holding the copy button (Default)            --
---     2 = always                                             --
---                                                            --
-----------------------------------------------------------------
--- Version history:                                           --
---        - Made picker2_decimals fault-tolerant              --
---        - Not requiring wiremod anymore.
---   1.21 - Version 1.2 accidentaly required wiremod to work  --
---   1.2  - Made label positions a lot more consistent,       --
---          if there is a lot of them.                        --
---        - You can now display PhysObjs/bones of ragdolls.   --
---          "picker2" cycles between disabled/ents/bones.     --
---   1.1  - Added cvars for decimals and centerdist           --
---          Added box around labels. picker2_box 0 to disable --
---   1.0  - First public release, based on ReaperSWE's ver    --
-----------------------------------------------------------------
+-----------------------------------------------------------------
+-- Usage:                                                      --
+--   bind key picker2                                          --
+--     Enable/Disable picker.                                  --
+--                                                             --
+--   bind key +picker2_copy                                    --
+--     Copies the highlighted entry to the clipboard.          --
+--     Hold down, move mouse over label, release.              --
+--                                                             --
+-----------------------------------------------------------------
+-- Console Variables:                                          --
+--   picker2_centerdist:                                       --
+--     How far from the center should labels be drawn?         --
+--     Default = 16 pixels                                     --
+--                                                             --
+--   picker2_decimals:                                         --
+--     Number of decimals to round to.                         --
+--     Default = 2                                             --
+--                                                             --
+--   picker2_box:                                              --
+--     Draw boxes around the currently highlighted label?      --
+--     0 = never                                               --
+--     1 = while holding the copy button (Default)             --
+--     2 = always                                              --
+--                                                             --
+-----------------------------------------------------------------
+-- Version history:                                            --
+--   1.3.0 - Made picker2_decimals fault-tolerant              --
+--         - Updated for gmod 13 beta                          --
+--   1.2.1 - Version 1.2 accidentaly required wiremod to work  --
+--   1.2.0 - Made label positions a lot more consistent,       --
+--           if there is a lot of them.                        --
+--         - You can now display PhysObjs/bones of ragdolls.   --
+--           "picker2" cycles between disabled/ents/bones.     --
+--   1.1.0 - Added cvars for decimals and centerdist           --
+--           Added box around labels. picker2_box 0 to disable --
+--   1.0.0 - First public release, based on ReaperSWE's ver    --
+-----------------------------------------------------------------
 
 if not CLIENT then return end -- to avoid stupidity
 
@@ -70,11 +70,11 @@ local function pairs_sortvalues(tbl, criterion)
 		function(a,b)
 			return tbl[a] < tbl[b]
 		end
-	
+
 	tmp = {}
 	for k,v in pairs(tbl) do table.insert(tmp,k) end
 	table.sort(tmp, crit)
-	
+
 	local iter, state, index, k = ipairs(tmp)
 	return function()
 		index,k = iter(state, index)
@@ -107,29 +107,29 @@ local vec_forward, vec_left, vec_up
 local function drawents()
 	local centerdist, decimals = picker2_centerdist:GetFloat(), math.Clamp(math.floor(picker2_decimals:GetFloat()),0,16)
 	vecformat = string.format("%%.%df, %%.%df, %%.%df", decimals, decimals, decimals)
-	
+
 	selected_text = nil
-	
+
 	local entstable = ents.GetAll()
-	
+
 	local centerx = ScrW()/2
 	local centery = ScrH()/2
-	
+
 	-- reset the list of labeled entities
 	if not freeze_labels then textents = {} end
-	
+
 	local playerpos = LocalPlayer():GetPos()
 	local playershootpos = LocalPlayer():GetShootPos()
 	local trace = LocalPlayer():GetEyeTrace()
-	
+
 	local function drawent(entphys, realent, boneindex)
 		-- skip entities at players' feet, like the player entity itself and some other things servers tend to place.
 		if entphys:GetPos() == playerpos then return end
-		
+
 		local pos = entphys:GetPos()
 		-- skip entities that are too close to the player, including weapons
 		if playershootpos:Distance(pos) < 32 then return end
-		
+
 		local pos_ToScreen = ToScreen(pos)
 		-- Don't draw things we can't see.
 		if not pos_ToScreen.visible then return end
@@ -138,27 +138,27 @@ local function drawents()
 		if scrposy < 0 then return end
 		if scrposx >= ScrW() then return end
 		if scrposy >= ScrH() then return end
-		
+
 		--pos_center = entphys:LocalToWorld( Vector( 0, 0, 0)):ToScreen() scrposx,scrposy = pos_center.x, pos_center.y
 		local LocalToWorld = entphys.LocalToWorld
 		pos_axis = ToScreen(LocalToWorld(entphys, vec_forward))
 		SetDrawColor( 255, 0, 0, 255 ) DrawLine( pos_axis.x, pos_axis.y, scrposx, scrposy )
-		
+
 		pos_axis = ToScreen(LocalToWorld(entphys, vec_left))
 		SetDrawColor( 0, 255, 0, 255 ) DrawLine( pos_axis.x, pos_axis.y, scrposx, scrposy )
-		
+
 		pos_axis = ToScreen(LocalToWorld(entphys, vec_up))
 		SetDrawColor( 0, 0, 255, 255 ) DrawLine( pos_axis.x, pos_axis.y, scrposx, scrposy )
-		
+
 		-- Don't draw labels for things off-center
 		if abs(scrposx-centerx) > centerdist then return end
 		if abs(scrposy-centery) > centerdist then return end
 		if freeze_labels then return end
-		
+
 		-- draw labels for this entity
 		textents[entphys] = { pos, scrposx, scrposy, nil, realent, boneindex or 0 }
 	end -- function drawent
-	
+
 	-- draw axes
 	for _, ent in ipairs(entstable) do
 		if mode == 1 then
@@ -178,7 +178,7 @@ local function drawents()
 			end
 		end
 	end -- for entstable
-	
+
 	-- Always draw labels for the entity the player is looking at.
 	local traceent = trace.Entity
 	if validEntity(traceent) and not freeze_labels then
@@ -192,29 +192,29 @@ local function drawents()
 		end
 		local pos = traceent:GetPos()
 		local pos_ToScreen = ToScreen(pos)
-		local scrposx, scrposy = pos_ToScreen.x, pos_ToScreen.y	
-		
+		local scrposx,scrposy = math.floor(pos_ToScreen.x),math.floor(pos_ToScreen.y)
+
 		local localvec = nil
-		if not freeze_labels then 
+		if not freeze_labels then
 			local localpos = traceent:WorldToLocal(trace.HitPos)
 			localvec = "Local Position: " .. FormatVector(localpos)
 		end
-		
+
 		if hasphys then
 			textents[traceent] = { pos, scrposx, scrposy, localvec, trace.Entity, trace.PhysicsBone }
 		else
 			textents[traceent] = { pos, scrposx, scrposy, localvec, nil, 0 }
 		end
 	end
-	
+
 	local pos, scrposx, scrposy, localvec
-	
+
 	-- keep track of the element closest to the crosshair.
 	local mindist, mintext, minx, miny, minent,minenttext = math.huge,nil,0,0,NULL,""
 	local function table_insert_logclosest(texts, ent, curtext)
 		local x,y = scrposx-centerx, scrposy+(#texts+0.5)*16-centery
 		local curdist = x*x+y*y*16
-		
+
 		if curdist < mindist then
 			mindist = curdist
 			mintext = curtext
@@ -224,7 +224,7 @@ local function drawents()
 		end
 		table_insert(texts,curtext)
 	end
-	
+
 	local nextscrposy = -math.huge
 	-- draw labels
 	local function drawlabel(ent,v)
@@ -232,14 +232,14 @@ local function drawents()
 		local isEntity = not realent
 		if freeze_labels then
 			local pos_ToScreen = ToScreen(pos)
-			scrposx,scrposy = pos_ToScreen.x,pos_ToScreen.y
+			scrposx,scrposy = math.floor(pos_ToScreen.x),math.floor(pos_ToScreen.y)
 		end
-		
+
 		if nextscrposy>scrposy then scrposy = nextscrposy end
-		
+
 		v[2] = scrposx
 		v[3] = scrposy
-		
+
 		local texts = {}
 		local name = ""
 		if isEntity then
@@ -249,48 +249,49 @@ local function drawents()
 			if not validEntity(realent) then return end
 			table_insert_logclosest( texts, ent, "Bone: #"..boneindex.." of Entity #"..realent:EntIndex())
 		end
-		
+
 		if pos.x ~= 0 or pos.y ~= 0 or pos.z ~= 0 then
 			table_insert_logclosest( texts, ent, "Position: " .. FormatVector(pos) )
 		end
-		
+
 		if localvec then
 			table_insert_logclosest( texts, ent, localvec )
 		end
-		
+
 		local angle = ent:GetAngles()
 		if angle.p ~= 0 or angle.y ~= 0 or angle.r ~= 0 then
 			table_insert_logclosest( texts, ent, "Angles: ".. FormatAngle(angle) )
 		end
-		
+
 		if isEntity then
 			local model = ent:GetModel()
 			if model and model ~= "" then
 				table_insert_logclosest( texts, ent, "Model: ".. model )
 			end
-			
+
 			local material = ent:GetMaterial()
 			if material and material ~= "" then
 				table_insert_logclosest( texts, ent, "Material: ".. material )
 			end
-			
+
 			local colr, colg, colb, cola = ent:GetColor()
+			if VERSION >= 150 then colr, colg, colb, cola = colr.r, colr.g, colr.b, colr.a end
 			if colr ~= 255 or colg ~= 255 or colb ~= 255 or cola ~= 255 then
 				table_insert_logclosest( texts, ent, "Color: ".. colr ..", ".. colg ..", ".. colb ..", ".. cola )
 			end
-			
+
 			if ent:IsPlayer() then
 				table_insert_logclosest(texts, "Health: ".. ent:Health() .." Armor: ".. ent:Armor())
 			end
 		end
-		
+
 		local text = table.concat(texts, "\n")
 		if ent == minent then minenttext = text end
-		
+
 		draw.DrawText(text, "BudgetLabel", scrposx, scrposy, Color(255,255,255,255), TEXT_ALIGN_LEFT)
 		nextscrposy = scrposy + (#texts)*16+8
 	end
-	
+
 	local function less_bone(a,b)
 		if a then
 			if b then return (a[3])<(b[3]) end
@@ -301,7 +302,7 @@ local function drawents()
 	for ent,v in pairs_sortvalues(textents,less_bone) do
 		if v then drawlabel(ent,v) end
 	end
-	
+
 	-- overdraw the closest label in green
 	if mintext then
 		local drawbox = picker2_box:GetInt()
@@ -315,7 +316,7 @@ local function drawents()
 			draw.RoundedBox(1, minx-5, miny-1, w+10, 18, Color(32,32,32,255) )
 			selected_text = mintext
 		end
-		
+
 		draw.DrawText(mintext, "BudgetLabel", minx, miny, Color(128,255,128,255), TEXT_ALIGN_LEFT)
 	end
 end -- function drawents
@@ -325,19 +326,19 @@ concommand.Add("picker2", function(ply, command, args)
 	if mode == 0 then
 		hook.Remove("HUDPaint", "picker2")
 		GAMEMODE:AddNotify("Picker disabled.", NOTIFY_CLEANUP, 3)
-		
+
 		selected_text = nil
 	elseif mode == 1 then
 		hook.Add("HUDPaint", "picker2", drawents)
 		GAMEMODE:AddNotify("Showing entities.", NOTIFY_GENERIC, 3)
-		
+
 		vec_forward = Vector(20,  0,  0)
 		vec_left    = Vector( 0, 20,  0)
 		vec_up      = Vector( 0,  0, 20)
 	elseif mode == 2 then
 		hook.Add("HUDPaint", "picker2", drawents)
 		GAMEMODE:AddNotify("Showing physics objects/bones.", NOTIFY_GENERIC, 3)
-		
+
 		vec_forward = Vector(8, 0, 0)
 		vec_left    = Vector(0, 8, 0)
 		vec_up      = Vector(0, 0, 8)
