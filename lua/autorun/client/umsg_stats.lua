@@ -112,7 +112,7 @@ local function do_umsg_hooks()
 		lastamount, lastsize, lasttime = totalamount, totalsize, t
 	end)
 	
-	umsg_stats_display = CreateClientConVar("umsg_stats_display", 1, true, false)
+	umsg_stats_display = CreateClientConVar("umsg_stats_display", 0, true, false)
 	cvars.AddChangeCallback("umsg_stats_display", function(CVar, PreviousValue, NewValue)
 		if PreviousValue == NewValue then return end
 		NewValue = tonumber(NewValue) or 0
